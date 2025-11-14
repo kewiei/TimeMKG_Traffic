@@ -31,7 +31,7 @@ class FlattenHead(nn.Module):
 
 class Model(nn.Module):
 
-    def __init__(self, configs):
+    def __init__(self, configs, tokenizer=None, LLMmodel=None):
         super(Model, self).__init__()
         self.task_name = configs.task_name
         self.pred_len = configs.pred_len
@@ -53,9 +53,20 @@ class Model(nn.Module):
                 variable, prompt = line.split(':', 1)
                 self.prompts[variable.strip()] = prompt.strip()
 
-        model_path = "/mnt/petrelfs/sunyifei/qwen3"
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-        self.LLMmodel = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
+        # model_path = "/mnt/petrelfs/sunyifei/qwen3"
+        # model_path = "Qwen/Qwen3-8B"
+        # self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        # self.LLMmodel = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
+
+        model_path = "E:\gitroot\Qwen3-8B"
+        if tokenizer is not None:
+            self.tokenizer = tokenizer
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        if LLMmodel is not None:
+            self.LLMmodel = LLMmodel
+        else:
+            self.LLMmodel = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 

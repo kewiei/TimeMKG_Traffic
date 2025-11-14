@@ -212,7 +212,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
                 pred = outputs
                 true = batch_y
-
                 preds.append(pred)
                 trues.append(true)
                 if i % 20 == 0:
@@ -226,7 +225,6 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
         preds = np.concatenate(preds, axis=0)
         trues = np.concatenate(trues, axis=0)
-        print('test shape:', preds.shape, trues.shape)
         preds = preds.reshape(-1, preds.shape[-2], preds.shape[-1])
         trues = trues.reshape(-1, trues.shape[-2], trues.shape[-1])
         print('test shape:', preds.shape, trues.shape)

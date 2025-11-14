@@ -5,6 +5,11 @@ import torch.backends
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast
 from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
 from exp.exp_classification import Exp_Classification
+
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+
+from sv_transformer.exp_old_transformer import Old_transformer_Forecast
 from utils.print_args import print_args
 import random
 import numpy as np
@@ -19,19 +24,20 @@ if __name__ == '__main__':
 
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
-                        help='task name, options:[long_term_forecast, short_term_forecast, classification]')
-    parser.add_argument('--is_training', type=int, default=1, help='status')
+                        help='task name, options:[long_term_forecast, short_term_forecast, classification, old_transformer_forecast]')
+    parser.add_argument('--is_training', type=int, default=0, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
-    parser.add_argument('--model', type=str, default='TimeMKG',
+    parser.add_argument('--model', type=str, default='iTransformer',
                         help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer]')
 
     # data loader
     parser.add_argument('--data', type=str, default='Traffic_Multivariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate],' 
                         'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables.')
 
-    parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
-    # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
+    # parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--root_path', type=str, default=r'E:/SUMO_Outputs/2V_base/edge_merge/', help='root path of the data file')  #Set according to dataset path
+    # parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
+    parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
     parser.add_argument('--features', type=str, default='M',
                         help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')
@@ -40,19 +46,19 @@ if __name__ == '__main__':
     parser.add_argument('--seasonal_patterns', type=str, default='Monthly', help='subset for M4')
     parser.add_argument('--target', type=str, default='speed', help='target feature in S or MS task')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
-    parser.add_argument('--prompt_path', type=str, default='traffic/Code/MKG/traffic.txt', help='location of dataset prompt')
+    parser.add_argument('--prompt_path', type=str, default='./traffic.txt', help='location of dataset prompt')
 
     # forecasting task
-    parser.add_argument('--seq_len', type=int, default=96, help='input sequence length') #input length
+    parser.add_argument('--seq_len', type=int, default=12, help='input sequence length') #input length
     parser.add_argument('--label_len', type=int, default=0, help='start token length')
-    parser.add_argument('--pred_len', type=int, default=96, help='prediction sequence length') # output length
+    parser.add_argument('--pred_len', type=int, default=12, help='prediction sequence length') # output length
     parser.add_argument('--inverse', action='store_true', help='inverse output data', default=False)
     # model define
-    parser.add_argument('--enc_in', type=int, default=17, help='encoder input size, Number of input variables')
-    parser.add_argument('--dec_in', type=int, default=17, help='decoder input size, Number of input variables')
+    parser.add_argument('--enc_in', type=int, default=2, help='encoder input size, Number of input variables')
+    parser.add_argument('--dec_in', type=int, default=2, help='decoder input size, Number of input variables')
 
     # parser.add_argument('--c_out', type=int, default=1, help='output size, Number of predictors: Singlevariate') # Singlevariate output
-    parser.add_argument('--c_out', type=int, default=17, help='output size, Number of predictors: Singlevariate') # multivariate output
+    parser.add_argument('--c_out', type=int, default=2, help='output size, Number of predictors: Singlevariate') # multivariate output
 
     parser.add_argument('--d_model', type=int, default=512, help='dimension of model') # Model hyperparameters
     parser.add_argument('--n_heads', type=int, default=8, help='num of heads') # Model hyperparameters
@@ -131,6 +137,8 @@ if __name__ == '__main__':
         Exp = Exp_Short_Term_Forecast
     elif args.task_name == 'classification':
         Exp = Exp_Classification
+    elif args.task_name == 'old_transformer_forecast':
+        Exp = Old_transformer_Forecast
     else:
         Exp = Exp_Long_Term_Forecast
 
