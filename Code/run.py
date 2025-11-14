@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
-                        help='task name, options:[long_term_forecast, short_term_forecast, classification, old_transformer_forecast]')
+                        help='task name, options:[long_term_forecast, short_term_forecast, classification]')
     parser.add_argument('--is_training', type=int, default=0, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
     parser.add_argument('--model', type=str, default='iTransformer',
