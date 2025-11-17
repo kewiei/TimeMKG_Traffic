@@ -21,8 +21,8 @@ def extract_num(file_name):
     except:
         return 0
 
-# csv_files = [f for f in os.listdir(traffic_dir) if f.startswith("edge_records_") and f.endswith(".csv")]
-csv_files = [f for f in os.listdir(traffic_dir) if f.startswith("edge_records_11.csv") and f.endswith(".csv")]
+csv_files = [f for f in os.listdir(traffic_dir) if f.startswith("edge_records_") and f.endswith(".csv")]
+# csv_files = [f for f in os.listdir(traffic_dir) if f.startswith("edge_records_11.csv") and f.endswith(".csv")]
 csv_files.sort(key=extract_num)
 total_files = len(csv_files)
 print('csv_files',os.listdir(traffic_dir))
