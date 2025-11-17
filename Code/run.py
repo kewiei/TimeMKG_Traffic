@@ -9,10 +9,16 @@ from exp.exp_classification import Exp_Classification
 import sys, pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
 
-from sv_transformer.exp_old_transformer import Old_transformer_Forecast
 from utils.print_args import print_args
 import random
 import numpy as np
+
+def _init_qwen():
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    model_path = "E:\gitroot\Qwen3-8B"
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
+    return tokenizer, model
 
 if __name__ == '__main__':
     fix_seed = 1024
@@ -25,7 +31,7 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
-    parser.add_argument('--is_training', type=int, default=0, help='status')
+    parser.add_argument('--is_training', type=int, default=1, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
     parser.add_argument('--model', type=str, default='iTransformer',
                         help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer]')
@@ -36,8 +42,8 @@ if __name__ == '__main__':
 
     # parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
     parser.add_argument('--root_path', type=str, default=r'E:/SUMO_Outputs/2V_base/edge_merge/', help='root path of the data file')  #Set according to dataset path
-    # parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
-    parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
+    parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
+    # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
     parser.add_argument('--features', type=str, default='M',
                         help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')
@@ -137,16 +143,23 @@ if __name__ == '__main__':
         Exp = Exp_Short_Term_Forecast
     elif args.task_name == 'classification':
         Exp = Exp_Classification
-    elif args.task_name == 'old_transformer_forecast':
-        Exp = Old_transformer_Forecast
     else:
         Exp = Exp_Long_Term_Forecast
+
+    # Initialize Qwen model and tokenizer for TimeMKG, so multiple TimeMKG can share the same LLM instance.
+    if args.model == 'TimeMKG':
+        tokenizer, llm_model = _init_qwen()
+        args.tokenizer = tokenizer
+        args.llm_model = llm_model
+        print('Qwen model and tokenizer loaded.')
+
 
     if args.is_training:
         for ii in range(args.itr):
             # setting record of experiments
             exp = Exp(args)  # set experiments
-            setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_{}'.format(
+            node_id = args.data_path.split('.')[0].replace('id_', '')
+            setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
                 args.task_name,
                 args.model_id,
                 args.model,
@@ -165,7 +178,9 @@ if __name__ == '__main__':
                 args.factor,
                 args.embed,
                 args.distil,
-                args.des, ii)
+                args.des,
+                node_id,
+                ii)
 
             print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
             exp.train(setting)
@@ -179,7 +194,8 @@ if __name__ == '__main__':
     else:
         exp = Exp(args)  # set experiments
         ii = 0
-        setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_{}'.format(
+        node_id = args.data_path.split('.')[0].replace('id_', '')
+        setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
             args.task_name,
             args.model_id,
             args.model,
@@ -198,10 +214,38 @@ if __name__ == '__main__':
             args.factor,
             args.embed,
             args.distil,
-            args.des, ii)
+            args.des,
+            node_id,
+            ii)
 
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting, test=1)
+#         inputs = np.array([[ 10.6818, 83.577 ],
+#   [ 10.4175, 392.4576],
+#   [ 12.9762, 314.2285],
+#   [ 12.2162, 393.4432],
+#   [ 11.128 , 259.8624],
+#   [ 12.5343, 384.3167],
+#   [ 11.336 , 127.5463],
+#   [ 13.3389, 315.8902],
+#   [  8.916  ,615.9818],
+#   [ 11.19  ,  92.0852],
+#   [ 10.4097, 387.4082],
+#   [ 10.4267, 318.2725]])
+        inputs = np.array([[[ 10.6818, 83.577 ],
+  [ 10.4175, 392.4576],
+  [ 12.9762, 314.2285],
+  [ 12.2162, 393.4432],
+  [ 11.128 , 259.8624],
+  [ 12.5343, 384.3167],
+  [ 11.336 , 127.5463],
+  [ 13.3389, 315.8902],
+  [  8.916  ,615.9818],
+  [ 11.19  ,  92.0852],
+  [ 10.4097, 387.4082],
+  [ 10.4267, 318.2725]]])
+        # exp.test(setting, test=1)
+        res = exp.predict(setting, inputs)
+        print('pred result shape:', res, res.shape)
         if args.gpu_type == 'mps':
             torch.backends.mps.empty_cache()
         elif args.gpu_type == 'cuda':

@@ -31,7 +31,7 @@ class FlattenHead(nn.Module):
 
 class Model(nn.Module):
 
-    def __init__(self, configs, tokenizer=None, LLMmodel=None):
+    def __init__(self, configs):
         super(Model, self).__init__()
         self.task_name = configs.task_name
         self.pred_len = configs.pred_len
@@ -58,7 +58,10 @@ class Model(nn.Module):
         # self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         # self.LLMmodel = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
 
+        # using shared LLM model and tokenizer from args are preferred
         model_path = "E:\gitroot\Qwen3-8B"
+        tokenizer = getattr(configs, 'tokenizer', None)
+        LLMmodel = getattr(configs, 'llm_model', None)
         if tokenizer is not None:
             self.tokenizer = tokenizer
         else:

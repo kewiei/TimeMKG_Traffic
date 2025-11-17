@@ -1,22 +1,27 @@
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, visual
+from utils.tools import EarlyStopping, EarlyStopping_withScaler, adjust_learning_rate, visual
 from utils.metrics import metric
 import torch
 import torch.nn as nn
 from torch import optim
 import os
 import time
+import json
 import warnings
 import numpy as np
+import logging
 from utils.dtw_metric import dtw, accelerated_dtw
 from utils.augmentation import run_augmentation, run_augmentation_single
 from utils.metrics import smape, mase, owa
+from sklearn.preprocessing import StandardScaler
 warnings.filterwarnings('ignore')
 
 class Exp_Long_Term_Forecast(Exp_Basic):
     def __init__(self, args):
         super(Exp_Long_Term_Forecast, self).__init__(args)
+        self.checkpoint_loaded = False
+        self.setting = None
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -36,7 +41,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def _select_criterion(self):
         criterion = nn.MSELoss()
         return criterion
- 
+    
+    def _get_default_checkpoint_path(self, setting):
+        path = os.path.join(self.args.checkpoints, setting)
+        return path
+
 
     def vali(self, vali_data, vali_loader, criterion):
         total_loss = []
@@ -77,14 +86,15 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
 
-        path = os.path.join(self.args.checkpoints, setting)
-        if not os.path.exists(path):
-            os.makedirs(path)
+        self.setting = setting
+        checkpoint_path = self._get_default_checkpoint_path(setting)
+        if not os.path.exists(checkpoint_path):
+            os.makedirs(checkpoint_path)
 
         time_now = time.time()
 
         train_steps = len(train_loader)
-        early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
+        early_stopping = EarlyStopping_withScaler(patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
         criterion = self._select_criterion()
@@ -152,24 +162,93 @@ class Exp_Long_Term_Forecast(Exp_Basic):
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-            early_stopping(vali_loss, self.model, path)
+            early_stopping(vali_loss, self.model, checkpoint_path, scaler=train_data.scaler)
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
 
             adjust_learning_rate(model_optim, epoch + 1, self.args)
 
-        best_model_path = path + '/' + 'checkpoint.pth'
-        self.model.load_state_dict(torch.load(best_model_path))
-
+        best_model_path = checkpoint_path
+        self._load_checkpoint(best_model_path)
         return self.model
+    
+    def predict(self, setting, batch_x,):
+        if self.setting is not None and self.setting != setting:
+            print('warining: setting is not consistent with the one used in training or last prediction.')
+        if not self.checkpoint_loaded:
+            self.setting = setting
+            checkpoint_path = self._get_default_checkpoint_path(setting)
+            self._load_checkpoint(checkpoint_path)
 
+        # reshape, scale and reshape back
+        shape = batch_x.shape  # (batch, seq_len, features)
+        flat = batch_x.reshape(shape[0] * shape[1], shape[2])
+        flat = self.training_data_scaler.transform(flat)
+        batch_x = flat.reshape(shape)
+
+        # batch_x = self.training_data_scaler.transform(batch_x)
+        batch_x = torch.from_numpy(batch_x)
+
+        batch_x_mark = np.zeros((batch_x.shape[0], self.args.seq_len, 0)) # shape[0], seq_len, time_feature
+        batch_x_mark = torch.from_numpy(batch_x_mark)
+        self.model.eval()
+        with torch.no_grad():
+            batch_x = batch_x.float().to(self.device)
+
+            batch_x_mark = batch_x_mark.float().to(self.device)
+            # encoder - decoder
+            if self.args.use_amp:
+                with torch.cuda.amp.autocast():
+                    outputs = self.model(batch_x, batch_x_mark, None, None)
+            else:
+                outputs = self.model(batch_x, batch_x_mark, None, None)
+
+            f_dim = -1 if self.args.features == 'MS' else 0
+            outputs = outputs[:, -self.args.pred_len:, :]
+            outputs = outputs.detach().cpu().numpy()
+            # Inverse transform, return the data to the original scale
+            shape = batch_x.shape
+            if outputs.shape[-1] != batch_x.shape[-1]:
+                outputs = np.tile(outputs, [1, 1, int(batch_x.shape[-1] / outputs.shape[-1])])
+            outputs = self.training_data_scaler.inverse_transform(outputs.reshape(shape[0] * shape[1], -1)).reshape(shape)
+            
+            outputs = outputs[:, :, f_dim:]
+            pred = outputs
+        return pred
+    
+    def _load_checkpoint(self, path):
+        model_path = path + '/' + 'checkpoint.pth'
+        checkpoint = torch.load(model_path)
+        self.model.load_state_dict(checkpoint)
+        self.checkpoint_loaded = True
+        print(f"Model loaded from {path}")
+        aux_state_path = path + '/' + 'aux_state.json'
+        if os.path.exists(aux_state_path):
+            with open(aux_state_path, 'r') as f:
+                aux_state = json.load(f)
+            scaler_state = aux_state.get('scaler', None)
+            if scaler_state is not None:
+                scaler = StandardScaler()
+                scaler.mean_ = np.array(scaler_state['mean'])
+                scaler.scale_ = np.array(scaler_state['scale'])
+                scaler.var_ = scaler.scale_ ** 2
+                scaler.n_samples_seen_ = 1
+                self.training_data_scaler = scaler
+                print("training_data_scaler state loaded from the checkpoint.")
+            else:
+                print("No scaler state found in the checkpoint.")
+        else:
+            print("No scaler state found in the checkpoint.")
+        
     def test(self, setting, test=0):
         test_data, test_loader = self._get_data(flag='test')
         if test:
             print('loading model')
-            self.model.load_state_dict(torch.load(os.path.join('./checkpoints/' + setting, 'checkpoint.pth')))
-
+            self.setting = setting
+            checkpoint_path = self._get_default_checkpoint_path(setting)
+            self._load_checkpoint(checkpoint_path)
+            
         preds = []
         trues = []
         folder_path = './test_results/' + setting + '/'
@@ -179,9 +258,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         self.model.eval()
         with torch.no_grad():
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
+                # shape = batch_y.shape
+                # print('batch_x', batch_x.shape, test_data.inverse_transform(batch_x.reshape(shape[0] * shape[1], -1)).reshape(shape), 'batch_y', batch_y.shape, batch_y)
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
 
+                # print('batch_x_mark', batch_x_mark.shape, batch_x_mark, 'batch_y_mark', batch_y_mark.shape, batch_y_mark)
                 batch_x_mark = batch_x_mark.float().to(self.device)
                 batch_y_mark = batch_y_mark.float().to(self.device)
 
