@@ -15,10 +15,18 @@ import numpy as np
 
 def _init_qwen():
     from transformers import AutoTokenizer, AutoModelForCausalLM
-    model_path = "E:\gitroot\Qwen3-8B"
+    model_path = "/home/nanodt/gitroot/Qwen3-4B"
     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
     model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
     return tokenizer, model
+
+edges_pool = ["1-2","1-901","1-903","2-1","2-5","2-905","2-906","5-2","5-6","5-16","6-5","6-8","6-16","6-21","7-5","7-8","8-6","8-7","8-10","9-7","9-10",
+                "10-8","10-9","10-12","11-9","11-12","12-10","12-11","12-14","12-23","13-11","13-14","14-12","14-24","14-909","16-6","16-21","16-907",
+                "21-6","21-16","21-22","22-21","22-23","22-26","23-12","23-24","23-27","24-27","26-22","26-32","26-34","26-911","27-23","27-28","28-27","28-29","28-32","29-28","29-30",
+                "30-29","30-31","30-912","31-29","31-30","31-33","32-26","32-28","32-33","33-31","33-32","33-915","34-26","34-35","35-34","35-36","35-37",
+                "36-35","36-37","36-40","37-35","37-38","37-41","38-37",
+                "40-36","40-42","41-37","41-40","41-44","42-40","42-45","43-41","43-44","44-41","44-43","44-45","44-46","45-44","45-46","45-917","46-44","46-918","46-919",
+                "901-1","903-1","904-1","905-2","907-16","908-13","909-14","910-22","911-26","913-34","914-36","915-33","916-43","917-45","919-46"]
 
 if __name__ == '__main__':
     fix_seed = 1024
@@ -41,7 +49,7 @@ if __name__ == '__main__':
                         'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables.')
 
     # parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--root_path', type=str, default=r'E:/SUMO_Outputs/2V_base/edge_merge/', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--root_path', type=str, default=r'/home/nanodt/gitroot/SUMO_Outputs/2V_base/edge_merge/', help='root path of the data file')  #Set according to dataset path
     parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
     # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
@@ -155,42 +163,44 @@ if __name__ == '__main__':
 
 
     if args.is_training:
-        for ii in range(args.itr):
-            # setting record of experiments
-            exp = Exp(args)  # set experiments
-            node_id = args.data_path.split('.')[0].replace('id_', '')
-            setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
-                args.task_name,
-                args.model_id,
-                args.model,
-                args.data,
-                args.features,
-                args.seq_len,
-                args.label_len,
-                args.pred_len,
-                args.d_model,
-                args.n_heads,
-                args.e_layers,
-                args.d_layers,
-                args.d_ff,
-                args.expand,
-                args.d_conv,
-                args.factor,
-                args.embed,
-                args.distil,
-                args.des,
-                node_id,
-                ii)
+        for edge_id in edges_pool:
+            args.data_path = f"id_{edge_id}"
+            for ii in range(args.itr):
+                # setting record of experiments
+                exp = Exp(args)  # set experiments
+                node_id = args.data_path.split('.')[0].replace('id_', '')
+                setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
+                    args.task_name,
+                    args.model_id,
+                    args.model,
+                    args.data,
+                    args.features,
+                    args.seq_len,
+                    args.label_len,
+                    args.pred_len,
+                    args.d_model,
+                    args.n_heads,
+                    args.e_layers,
+                    args.d_layers,
+                    args.d_ff,
+                    args.expand,
+                    args.d_conv,
+                    args.factor,
+                    args.embed,
+                    args.distil,
+                    args.des,
+                    node_id,
+                    ii)
 
-            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-            exp.train(setting)
+                print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+                exp.train(setting)
 
-            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-            exp.test(setting)
-            if args.gpu_type == 'mps':
-                torch.backends.mps.empty_cache()
-            elif args.gpu_type == 'cuda':
-                torch.cuda.empty_cache()
+                print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+                exp.test(setting)
+                if args.gpu_type == 'mps':
+                    torch.backends.mps.empty_cache()
+                elif args.gpu_type == 'cuda':
+                    torch.cuda.empty_cache()
     else:
         exp = Exp(args)  # set experiments
         ii = 0
