@@ -41,16 +41,15 @@ if __name__ == '__main__':
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
     parser.add_argument('--is_training', type=int, default=1, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
-    parser.add_argument('--model', type=str, default='iTransformer',
-                        help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer]')
+    parser.add_argument('--model', type=str, default='TimeMKG',
+                        help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer, DLinear]')
 
-    # data loader
-    parser.add_argument('--data', type=str, default='Traffic_Multivariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate],' 
-                        'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables.')
+    # data loader  NEW function
+    parser.add_argument('--data', type=str, default='Traffic_Singlevariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate or Traffic_merge],' 
+                        'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables. Traffic_merge can train all links on a single model.')
 
-    # parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--root_path', type=str, default=r'/home/nanodt/gitroot/SUMO_Outputs/2V_base/edge_merge/', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--data_path', type=str, default='id_1-2.csv', help='data file') # single traffic ; Set according to dataset path
+    parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--data_path', type=str, default='id_1-901.csv', help='data file') # single traffic ; Set according to dataset path
     # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
     parser.add_argument('--features', type=str, default='M',
@@ -97,10 +96,10 @@ if __name__ == '__main__':
     # optimization
     parser.add_argument('--num_workers', type=int, default=10, help='data loader num workers')
     parser.add_argument('--itr', type=int, default=1, help='experiments times')
-    parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
+    parser.add_argument('--train_epochs', type=int, default=1, help='train epochs')
     parser.add_argument('--batch_size', type=int, default=16, help='batch size of train input data') # Adjust based on GPU memory
     parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
-    parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
+    parser.add_argument('--learning_rate', type=float, default=5e-5, help='optimizer learning rate')
     parser.add_argument('--des', type=str, default='test', help='exp description')
     parser.add_argument('--loss', type=str, default='MSE', help='loss function')
     parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
@@ -163,53 +162,49 @@ if __name__ == '__main__':
 
 
     if args.is_training:
-        for edge_id in edges_pool:
-            args.data_path = f"id_{edge_id}"
-            for ii in range(args.itr):
-                # setting record of experiments
-                exp = Exp(args)  # set experiments
-                node_id = args.data_path.split('.')[0].replace('id_', '')
-                setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
-                    args.task_name,
-                    args.model_id,
-                    args.model,
-                    args.data,
-                    args.features,
-                    args.seq_len,
-                    args.label_len,
-                    args.pred_len,
-                    args.d_model,
-                    args.n_heads,
-                    args.e_layers,
-                    args.d_layers,
-                    args.d_ff,
-                    args.expand,
-                    args.d_conv,
-                    args.factor,
-                    args.embed,
-                    args.distil,
-                    args.des,
-                    node_id,
-                    ii)
+        for ii in range(args.itr):
+            # setting record of experiments
+            exp = Exp(args)  # set experiments
+            setting = '{}_{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_{}'.format(
+                args.task_name,
+                args.model_id,
+                args.model,
+                args.data,
+                args.data_path,
+                args.features,
+                args.seq_len,
+                args.label_len,
+                args.pred_len,
+                args.d_model,
+                args.n_heads,
+                args.e_layers,
+                args.d_layers,
+                args.d_ff,
+                args.expand,
+                args.d_conv,
+                args.factor,
+                args.embed,
+                args.distil,
+                args.des, ii)
 
-                print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
-                exp.train(setting)
+            print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+            exp.train(setting)
 
-                print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-                exp.test(setting)
-                if args.gpu_type == 'mps':
-                    torch.backends.mps.empty_cache()
-                elif args.gpu_type == 'cuda':
-                    torch.cuda.empty_cache()
+            print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+            exp.test(setting)
+            if args.gpu_type == 'mps':
+                torch.backends.mps.empty_cache()
+            elif args.gpu_type == 'cuda':
+                torch.cuda.empty_cache()
     else:
         exp = Exp(args)  # set experiments
         ii = 0
-        node_id = args.data_path.split('.')[0].replace('id_', '')
-        setting = '{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_node{}_{}'.format(
+        setting = '{}_{}_{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_expand{}_dc{}_fc{}_eb{}_dt{}_{}_{}'.format(
             args.task_name,
             args.model_id,
             args.model,
             args.data,
+            args.data_path,
             args.features,
             args.seq_len,
             args.label_len,

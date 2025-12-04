@@ -1,23 +1,11 @@
-from data_provider.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_M4, PSMSegLoader, \
-    MSLSegLoader, SMAPSegLoader, SMDSegLoader, SWATSegLoader, UEAloader, Dataset_ETT_hour_Multi, Dataset_Traffic_Multivariate, Dataset_Traffic_Singlevariate
+from data_provider.data_loader import Dataset_Traffic_Multivariate, Dataset_Traffic_Singlevariate, Dataset_Traffic_Merge
 from data_provider.uea import collate_fn
 from torch.utils.data import DataLoader
 
 data_dict = {
     'Traffic_Singlevariate': Dataset_Traffic_Singlevariate,
     'Traffic_Multivariate':Dataset_Traffic_Multivariate,
-    'ETTh1': Dataset_ETT_hour,
-    'ETTh2': Dataset_ETT_hour,
-    'ETTm1': Dataset_ETT_minute,
-    'ETTm2': Dataset_ETT_minute,
-    'custom': Dataset_Custom,
-    'm4': Dataset_M4,
-    'PSM': PSMSegLoader,
-    'MSL': MSLSegLoader,
-    'SMAP': SMAPSegLoader,
-    'SMD': SMDSegLoader,
-    'SWAT': SWATSegLoader,
-    'UEA': UEAloader
+    'Traffic_merge':Dataset_Traffic_Merge
 }
 
 class CollateFn:

@@ -1,0 +1,17 @@
+arrived:Typically caused by entered (a higher number of vehicles entering a segment eventually leads to more vehicles arriving at the end, with a time lag).
+density:Directly affects occupancy (higher density increases the proportion of the segment occupied by vehicles);Reduces speed (higher density increases traffic friction, lowering speed, following the fundamental traffic flow relationship: speed = flow/density);Indirectly increases traveltime and timeLoss (congestion from high density prolongs travel time and amplifies delays).
+departed:Largely determined by entered (more vehicles entering eventually leads to more departing, with a time lag);A sudden surge in departed vehicles may temporarily reduce density and ease occupancy.
+entered:Increases density and laneDensity (more entering vehicles raise segment/lane density);Influences departed and left (higher entry volumes generally lead to higher exit volumes later);May trigger laneChangedFrom/laneChangedTo (vehicles often change lanes after entering to optimize routing).
+laneChangedFrom:Reduces laneDensity of the original lane (vehicles leaving lower the density);May briefly lower speed in the original lane (lane changes disrupt flow temporarily).
+laneChangedTo:Increases laneDensity of the target lane (vehicles entering raise the density);May briefly lower speed in the target lane (merging vehicles slow down the flow).
+laneDensity:Determined by entered, laneChangedFrom, and laneChangedTo (net vehicle flow in the lane);Higher lane density reduces lane-level speed and increases occupancy.
+left:Closely linked to departed (represents vehicles exiting the segment, often synonymous or with minor context differences);Influenced by entered (more entries lead to more exits over time).
+occupancy:Determined by density and average vehicle length (higher density/longer vehicles increase occupancy);High occupancy limits further entered vehicles (saturated segments cannot accept more traffic) and reduces speed.
+overlapTraveltime:Caused by overlapping travel periods of entered vehicles (more 密集 entries with similar travel durations increase overlap).
+sampledSeconds:Determined by entered and density (more vehicles/longer presence extend valid sampling time; zero when no vehicles are present).
+speed:Reduces traveltime (higher speed shortens time to traverse the segment);Lowers timeLoss (speed closer to free-flow reduces delays);Feeds back into density (lower speed exacerbates density, creating a congestion cycle).
+speedRelative:Calculated as the ratio of speed to the segment’s design speed (closer speed is to design speed, higher the relative speed).
+teleported:Represents simulated vehicles force-moved (e.g., out of bounds), with no direct causal links to other traffic variables.
+timeLoss:Determined by the gap between traveltime and free-flow travel time (longer traveltime or slower speed increases time loss);Amplified by high density and low entered efficiency (congestion-driven delays).
+traveltime:Inversely related to speed (lower speed prolongs travel time);Extended by high density and occupancy (congestion slows progress).
+waitingTime:Caused by low speed and high density (congestion leads to stagnation, increasing waiting time; negligible in free flow).
