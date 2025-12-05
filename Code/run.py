@@ -40,7 +40,7 @@ if __name__ == '__main__':
     parser.add_argument('--seasonal_patterns', type=str, default='Monthly', help='subset for M4')
     parser.add_argument('--target', type=str, default='speed', help='target feature in S or MS task')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
-    parser.add_argument('--prompt_path', type=str, default='./utils/traffic.txt', help='location of dataset prompt')
+    parser.add_argument('--prompt_path', type=str, default='./MKG/traffic.txt', help='location of dataset prompt')
 
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=12, help='input sequence length') #input length
