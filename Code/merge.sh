@@ -5,9 +5,9 @@
 export CUDA_VISIBLE_DEVICES=0
 
 # 模型名称
-model_name=DLinear
+model_name=TimeMKG
 
-DATA_ROOT_PATH="traffic/edge_test" 
+DATA_ROOT_PATH="/home/nanodt/gitroot/2V_base/edge_merge" 
 
 # 2. 其他固定的训练参数
 TASK_NAME="long_term_forecast"
