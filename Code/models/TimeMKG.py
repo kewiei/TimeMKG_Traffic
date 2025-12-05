@@ -60,7 +60,8 @@ class Model(nn.Module):
         self.prompt_embeddings_path = os.path.join(configs.checkpoints, f"prompt_embeddings_bs{configs.batch_size}.pt")
         
         # 只加载tokenizer（始终需要）
-        model_path = "/mnt/petrelfs/sunyifei/qwen3"
+        # model_path = "/mnt/petrelfs/sunyifei/qwen3"
+        model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
         self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -161,7 +162,8 @@ class Model(nn.Module):
             return self.LLMmodel
         
         print("Loading Qwen model...")
-        model_path = "/mnt/petrelfs/sunyifei/qwen3"
+        # model_path = "/mnt/petrelfs/sunyifei/qwen3"
+        model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
         self.LLMmodel = AutoModelForCausalLM.from_pretrained(
             model_path, 
             trust_remote_code=True, 

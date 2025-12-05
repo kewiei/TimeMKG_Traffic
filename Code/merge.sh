@@ -59,7 +59,7 @@ find "${DATA_ROOT_PATH}" -maxdepth 1 -type f -name "*.csv" | while read -r csv_f
     echo "======================================================================"
 
     # 4. 执行训练命令
-    python -u Code/run.py \
+    python -u run.py \
       --task_name "${TASK_NAME}" \
       --is_training "${IS_TRAINING}" \
       --root_path "${DATA_ROOT_PATH}" \
