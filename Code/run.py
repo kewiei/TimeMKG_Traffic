@@ -22,14 +22,14 @@ if __name__ == '__main__':
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
     parser.add_argument('--is_training', type=int, default=1, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
-    parser.add_argument('--model', type=str, default='TimeMKG',
+    parser.add_argument('--model', type=str, default='iTransformer',
                         help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer, DLinear]')
 
     # data loader  NEW function
-    parser.add_argument('--data', type=str, default='Traffic_Singlevariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate or Traffic_merge],' 
+    parser.add_argument('--data', type=str, default='Traffic_Multivariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate or Traffic_merge],' 
                         'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables. Traffic_merge can train all links on a single model.')
 
-    parser.add_argument('--root_path', type=str, default='traffic/edge_merge/', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--root_path', type=str, default='E:/SUMO_Outputs/2V_base/edge_merge_small', help='root path of the data file')  #Set according to dataset path
     parser.add_argument('--data_path', type=str, default='id_1-901.csv', help='data file') # single traffic ; Set according to dataset path
     # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
@@ -40,16 +40,16 @@ if __name__ == '__main__':
     parser.add_argument('--seasonal_patterns', type=str, default='Monthly', help='subset for M4')
     parser.add_argument('--target', type=str, default='speed', help='target feature in S or MS task')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
-    parser.add_argument('--prompt_path', type=str, default='traffic/Code/MKG/traffic.txt', help='location of dataset prompt')
+    parser.add_argument('--prompt_path', type=str, default='./utils/traffic.txt', help='location of dataset prompt')
 
     # forecasting task
-    parser.add_argument('--seq_len', type=int, default=96, help='input sequence length') #input length
+    parser.add_argument('--seq_len', type=int, default=12, help='input sequence length') #input length
     parser.add_argument('--label_len', type=int, default=0, help='start token length')
-    parser.add_argument('--pred_len', type=int, default=8, help='prediction sequence length') # output length
+    parser.add_argument('--pred_len', type=int, default=12, help='prediction sequence length') # output length
     parser.add_argument('--inverse', action='store_true', help='inverse output data', default=False)
     # model define
-    parser.add_argument('--enc_in', type=int, default=17, help='encoder input size, Number of input variables')
-    parser.add_argument('--dec_in', type=int, default=17, help='decoder input size, Number of input variables')
+    parser.add_argument('--enc_in', type=int, default=2, help='encoder input size, Number of input variables')
+    parser.add_argument('--dec_in', type=int, default=2, help='decoder input size, Number of input variables')
 
     # parser.add_argument('--c_out', type=int, default=1, help='output size, Number of predictors: Singlevariate') # Singlevariate output
     parser.add_argument('--c_out', type=int, default=1, help='output size, Number of predictors: Singlevariate') # multivariate output

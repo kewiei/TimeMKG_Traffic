@@ -1,0 +1,5 @@
+*.pyc
+/Code/test_results
+/Code/checkpoints
+/Code/results
+Code/result_long_term_forecast.txt
