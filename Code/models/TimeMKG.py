@@ -154,25 +154,25 @@ class Model(nn.Module):
         
         # 缓存
         self.prompt_embeddings_dict = {}
-        self.LLMmodel = None  # 延迟加载Qwen模型
+        self._LLMmodel = None  # 延迟加载Qwen模型
 
     def _load_llm_model(self):
         """延迟加载Qwen模型（仅在需要时）"""
-        if self.LLMmodel is not None:
-            return self.LLMmodel
+        if self._LLMmodel is not None:
+            return self._LLMmodel
         
         print("Loading Qwen model...")
         # model_path = "/mnt/petrelfs/sunyifei/qwen3"
         model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
-        self.LLMmodel = AutoModelForCausalLM.from_pretrained(
+        self._LLMmodel = AutoModelForCausalLM.from_pretrained(
             model_path, 
             trust_remote_code=True, 
             device_map="auto" if torch.cuda.is_available() else "cpu",
             low_cpu_mem_usage=True
         )
-        self.LLMmodel.eval()
+        self._LLMmodel.eval()
         print("Qwen model loaded successfully")
-        return self.LLMmodel
+        return self._LLMmodel
 
     def _get_prompt_embeddings(self, B, N, device):
         """获取或预计算prompt_embeddings"""
@@ -315,7 +315,7 @@ class Model(nn.Module):
     
     def __del__(self):
         """清理资源"""
-        if hasattr(self, 'LLMmodel') and self.LLMmodel is not None:
-            del self.LLMmodel
-            self.LLMmodel = None
+        if hasattr(self, 'LLMmodel') and self._LLMmodel is not None:
+            del self._LLMmodel
+            self._LLMmodel = None
         torch.cuda.empty_cache()
