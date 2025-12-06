@@ -5,9 +5,28 @@ import torch.backends
 from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast
 from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
 from exp.exp_classification import Exp_Classification
+
+import sys, pathlib
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+
 from utils.print_args import print_args
 import random
 import numpy as np
+
+def _init_qwen():
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    model_path = "/home/nanodt/gitroot/Qwen3-4B"
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
+    return tokenizer, model
+
+edges_pool = ["1-2","1-901","1-903","2-1","2-5","2-905","2-906","5-2","5-6","5-16","6-5","6-8","6-16","6-21","7-5","7-8","8-6","8-7","8-10","9-7","9-10",
+                "10-8","10-9","10-12","11-9","11-12","12-10","12-11","12-14","12-23","13-11","13-14","14-12","14-24","14-909","16-6","16-21","16-907",
+                "21-6","21-16","21-22","22-21","22-23","22-26","23-12","23-24","23-27","24-27","26-22","26-32","26-34","26-911","27-23","27-28","28-27","28-29","28-32","29-28","29-30",
+                "30-29","30-31","30-912","31-29","31-30","31-33","32-26","32-28","32-33","33-31","33-32","33-915","34-26","34-35","35-34","35-36","35-37",
+                "36-35","36-37","36-40","37-35","37-38","37-41","38-37",
+                "40-36","40-42","41-37","41-40","41-44","42-40","42-45","43-41","43-44","44-41","44-43","44-45","44-46","45-44","45-46","45-917","46-44","46-918","46-919",
+                "901-1","903-1","904-1","905-2","907-16","908-13","909-14","910-22","911-26","913-34","914-36","915-33","916-43","917-45","919-46"]
 
 if __name__ == '__main__':
     fix_seed = 1024
@@ -52,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--dec_in', type=int, default=2, help='decoder input size, Number of input variables')
 
     # parser.add_argument('--c_out', type=int, default=1, help='output size, Number of predictors: Singlevariate') # Singlevariate output
-    parser.add_argument('--c_out', type=int, default=1, help='output size, Number of predictors: Singlevariate') # multivariate output
+    parser.add_argument('--c_out', type=int, default=2, help='output size, Number of predictors: Singlevariate') # multivariate output
 
     parser.add_argument('--d_model', type=int, default=512, help='dimension of model') # Model hyperparameters
     parser.add_argument('--n_heads', type=int, default=8, help='num of heads') # Model hyperparameters
@@ -134,6 +153,14 @@ if __name__ == '__main__':
     else:
         Exp = Exp_Long_Term_Forecast
 
+    # Initialize Qwen model and tokenizer for TimeMKG, so multiple TimeMKG can share the same LLM instance.
+    if args.model == 'TimeMKG':
+        tokenizer, llm_model = _init_qwen()
+        args.tokenizer = tokenizer
+        args.llm_model = llm_model
+        print('Qwen model and tokenizer loaded.')
+
+
     if args.is_training:
         for ii in range(args.itr):
             # setting record of experiments
@@ -192,10 +219,38 @@ if __name__ == '__main__':
             args.factor,
             args.embed,
             args.distil,
-            args.des, ii)
+            args.des,
+            node_id,
+            ii)
 
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
-        exp.test(setting, test=1)
+#         inputs = np.array([[ 10.6818, 83.577 ],
+#   [ 10.4175, 392.4576],
+#   [ 12.9762, 314.2285],
+#   [ 12.2162, 393.4432],
+#   [ 11.128 , 259.8624],
+#   [ 12.5343, 384.3167],
+#   [ 11.336 , 127.5463],
+#   [ 13.3389, 315.8902],
+#   [  8.916  ,615.9818],
+#   [ 11.19  ,  92.0852],
+#   [ 10.4097, 387.4082],
+#   [ 10.4267, 318.2725]])
+        inputs = np.array([[[ 10.6818, 83.577 ],
+  [ 10.4175, 392.4576],
+  [ 12.9762, 314.2285],
+  [ 12.2162, 393.4432],
+  [ 11.128 , 259.8624],
+  [ 12.5343, 384.3167],
+  [ 11.336 , 127.5463],
+  [ 13.3389, 315.8902],
+  [  8.916  ,615.9818],
+  [ 11.19  ,  92.0852],
+  [ 10.4097, 387.4082],
+  [ 10.4267, 318.2725]]])
+        # exp.test(setting, test=1)
+        res = exp.predict(setting, inputs)
+        print('pred result shape:', res, res.shape)
         if args.gpu_type == 'mps':
             torch.backends.mps.empty_cache()
         elif args.gpu_type == 'cuda':
