@@ -39,17 +39,17 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
-    parser.add_argument('--is_training', type=int, default=1, help='status')
+    parser.add_argument('--is_training', type=int, default=0, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
-    parser.add_argument('--model', type=str, default='iTransformer',
+    parser.add_argument('--model', type=str, default='TimeMKG',
                         help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer, DLinear]')
 
     # data loader  NEW function
     parser.add_argument('--data', type=str, default='Traffic_Multivariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate or Traffic_merge],' 
                         'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables. Traffic_merge can train all links on a single model.')
 
-    parser.add_argument('--root_path', type=str, default='E:/SUMO_Outputs/2V_base/edge_merge_small', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--data_path', type=str, default='id_1-901.csv', help='data file') # single traffic ; Set according to dataset path
+    parser.add_argument('--root_path', type=str, default='/home/nanodt/gitroot/2V_base/edge_merge_few', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--data_path', type=str, default='id_10-8.csv', help='data file') # single traffic ; Set according to dataset path
     # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
     parser.add_argument('--features', type=str, default='M',

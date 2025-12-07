@@ -91,7 +91,12 @@ class EarlyStopping_withScaler:
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         aux_state = {'scaler': {'mean':scaler.mean_.tolist(), "scale":scaler.scale_.tolist()} if scaler is not None else None}
-        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+        sd = model.state_dict()
+        # ban_prefix = ("LLMmodel.", )
+        # filtered = {k: v for k, v in sd.items()
+        #             if not k.startswith(ban_prefix)}
+        filtered = sd
+        torch.save(filtered, path + '/' + 'checkpoint.pth')
         with open(path + '/' + 'aux_state.json', 'w') as f:
             json.dump(aux_state, f)
         self.val_loss_min = val_loss

@@ -154,25 +154,26 @@ class Model(nn.Module):
         
         # 缓存
         self.prompt_embeddings_dict = {}
-        self._LLMmodel = None  # 延迟加载Qwen模型
+        # ugly wrapper to prevent state_dict register
+        self.LLMmodel = {}  # 延迟加载Qwen模型
 
     def _load_llm_model(self):
         """延迟加载Qwen模型（仅在需要时）"""
-        if self._LLMmodel is not None:
-            return self._LLMmodel
+        if self.LLMmodel is not None and '#' in self.LLMmodel:
+            return self.LLMmodel['#']
         
         print("Loading Qwen model...")
         # model_path = "/mnt/petrelfs/sunyifei/qwen3"
         model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
-        self._LLMmodel = AutoModelForCausalLM.from_pretrained(
+        self.LLMmodel['#'] = AutoModelForCausalLM.from_pretrained(
             model_path, 
             trust_remote_code=True, 
             device_map="auto" if torch.cuda.is_available() else "cpu",
             low_cpu_mem_usage=True
         )
-        self._LLMmodel.eval()
+        self.LLMmodel['#'].eval()
         print("Qwen model loaded successfully")
-        return self._LLMmodel
+        return self.LLMmodel['#']
 
     def _get_prompt_embeddings(self, B, N, device):
         """获取或预计算prompt_embeddings"""
@@ -315,7 +316,7 @@ class Model(nn.Module):
     
     def __del__(self):
         """清理资源"""
-        if hasattr(self, 'LLMmodel') and self._LLMmodel is not None:
-            del self._LLMmodel
-            self._LLMmodel = None
+        if hasattr(self, 'LLMmodel') and self.LLMmodel is not None:
+            del self.LLMmodel
+            self.LLMmodel = None
         torch.cuda.empty_cache()
