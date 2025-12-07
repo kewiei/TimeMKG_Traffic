@@ -13,12 +13,12 @@ from utils.print_args import print_args
 import random
 import numpy as np
 
-def _init_qwen():
-    from transformers import AutoTokenizer, AutoModelForCausalLM
-    model_path = "/home/nanodt/gitroot/Qwen3-4B"
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
-    return tokenizer, model
+# def _init_qwen():
+#     from transformers import AutoTokenizer, AutoModelForCausalLM
+#     model_path = "/home/nanodt/gitroot/Qwen3-4B"
+#     tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+#     model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map=None)
+#     return tokenizer, model
 
 edges_pool = ["1-2","1-901","1-903","2-1","2-5","2-905","2-906","5-2","5-6","5-16","6-5","6-8","6-16","6-21","7-5","7-8","8-6","8-7","8-10","9-7","9-10",
                 "10-8","10-9","10-12","11-9","11-12","12-10","12-11","12-14","12-23","13-11","13-14","14-12","14-24","14-909","16-6","16-21","16-907",
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
-    parser.add_argument('--is_training', type=int, default=1, help='status')
+    parser.add_argument('--is_training', type=int, default=0, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
     parser.add_argument('--model', type=str, default='iTransformer',
                         help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer, DLinear]')
@@ -153,12 +153,12 @@ if __name__ == '__main__':
     else:
         Exp = Exp_Long_Term_Forecast
 
-    # Initialize Qwen model and tokenizer for TimeMKG, so multiple TimeMKG can share the same LLM instance.
-    if args.model == 'TimeMKG':
-        tokenizer, llm_model = _init_qwen()
-        args.tokenizer = tokenizer
-        args.llm_model = llm_model
-        print('Qwen model and tokenizer loaded.')
+    # # Initialize Qwen model and tokenizer for TimeMKG, so multiple TimeMKG can share the same LLM instance.
+    # if args.model == 'TimeMKG':
+    #     tokenizer, llm_model = _init_qwen()
+    #     args.tokenizer = tokenizer
+    #     args.llm_model = llm_model
+    #     print('Qwen model and tokenizer loaded.')
 
 
     if args.is_training:
@@ -220,7 +220,6 @@ if __name__ == '__main__':
             args.embed,
             args.distil,
             args.des,
-            node_id,
             ii)
 
         print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
