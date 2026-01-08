@@ -61,7 +61,10 @@ class Model(nn.Module):
         
         # 只加载tokenizer（始终需要）
         # model_path = "/mnt/petrelfs/sunyifei/qwen3"
-        model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
+        if self.configs.model=='TimeMKG8B':
+            model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-8B"
+        else:
+            model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
         self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -164,7 +167,10 @@ class Model(nn.Module):
         
         print("Loading Qwen model...")
         # model_path = "/mnt/petrelfs/sunyifei/qwen3"
-        model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
+        if self.configs.model=='TimeMKG8B':
+            model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-8B"
+        else:
+            model_path = "/home/mnt/nas/nanodt/gitroot/Qwen3-4B"
         self.LLMmodel['#'] = AutoModelForCausalLM.from_pretrained(
             model_path, 
             trust_remote_code=True, 

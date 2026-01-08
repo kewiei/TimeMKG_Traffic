@@ -35,7 +35,8 @@ class Exp_Basic(object):
             # 'TimeXer': TimeXer,
             # 'WPMixer': WPMixer,
             # 'MultiPatchFormer': MultiPatchFormer,
-            'TimeMKG': TimeMKG
+            'TimeMKG': TimeMKG,
+            'TimeMKG8B': TimeMKG
         }
         if args.model == 'Mamba':
             print('Please make sure you have successfully installed mamba_ssm')

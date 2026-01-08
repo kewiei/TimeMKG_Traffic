@@ -6,11 +6,10 @@ export CUDA_VISIBLE_DEVICES=0
 
 # 模型名称
 # model_name=TimeMKG
-model_name=TimeMKG8B
 # model_name=Autoformer
 # model_name=TimesNet
 # model_name=iTransformer
-# model_name=DLinear
+model_name=DLinear
 
 DATA_ROOT_PATH="/home/nanodt/gitroot/2V_base/edge_merge_base_large_acc" 
 

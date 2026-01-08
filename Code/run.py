@@ -39,17 +39,17 @@ if __name__ == '__main__':
     # basic config
     parser.add_argument('--task_name', type=str, default='long_term_forecast',
                         help='task name, options:[long_term_forecast, short_term_forecast, classification]')
-    parser.add_argument('--is_training', type=int, default=0, help='status')
+    parser.add_argument('--is_training', type=int, default=1, help='status')
     parser.add_argument('--model_id', type=str, default='Traffic', help='model id')
-    parser.add_argument('--model', type=str, default='TimeMKG',
-                        help='model name, options: [TimeMKG, Autoformer, TimesNet, iTransformer, DLinear]')
+    parser.add_argument('--model', type=str, default='TimeMKG8B',
+                        help='model name, options: [TimeMKG, TimeMKG8B, Autoformer, TimesNet, iTransformer, DLinear]')
 
     # data loader  NEW function
     parser.add_argument('--data', type=str, default='Traffic_Multivariate', help='dataset type: options: [Traffic_Singlevariate or Traffic_Multivariate or Traffic_merge],' 
                         'Singlevariate means that it only predicts a single target variable, such as speed, while multivariate means predicting all variables. Traffic_merge can train all links on a single model.')
 
-    parser.add_argument('--root_path', type=str, default='/home/nanodt/gitroot/2V_base/edge_merge_few', help='root path of the data file')  #Set according to dataset path
-    parser.add_argument('--data_path', type=str, default='id_10-8.csv', help='data file') # single traffic ; Set according to dataset path
+    parser.add_argument('--root_path', type=str, default='/home/nanodt/gitroot/2V_base/edge_merge_base_large_acc', help='root path of the data file')  #Set according to dataset path
+    parser.add_argument('--data_path', type=str, default='id_1-903.csv', help='data file') # single traffic ; Set according to dataset path
     # parser.add_argument('--data_path', type=str, default='merged_traffic.csv', help='data file') # merged traffic ; Set according to dataset path
     
     parser.add_argument('--features', type=str, default='M',
@@ -88,7 +88,7 @@ if __name__ == '__main__':
                         help='time features encoding, options:[timeF, fixed, learned]')
     parser.add_argument('--activation', type=str, default='gelu', help='activation')
     parser.add_argument('--max_len', type=int, default=30, help='data loader num workers')
-    parser.add_argument('--llm_dim', type=int, default=2560, help='data loader num workers')
+    parser.add_argument('--llm_dim', type=int, default=2560, help='data loader num workers. When the model is TimeMKG series, llm_dim will be forced to be 2560 if Qwen-4B is used, 4096 is Qwen-8B is used, as it is the output dimension of different Qwen models.')
     parser.add_argument('--top_k', type=int, default=5, help='for TimesBlock')
     parser.add_argument('--expand', type=int, default=2, help='expansion factor for Mamba')
     parser.add_argument('--d_conv', type=int, default=4, help='conv kernel size for Mamba')
@@ -143,6 +143,16 @@ if __name__ == '__main__':
 
     print('Args in experiment:')
     print_args(args)
+
+    # llm_dim will be forced to be 2560 if Qwen-4B is used, 4096 is Qwen-8B is used, as it is the output dimension of different Qwen models
+    if args.model == 'TimeMKG':
+        print(f'{args.model} is in use, forcing llm_dim to be 2560')
+        args.llm_dim = 2560 
+    elif args.model == 'TimeMKG8B':
+        print(f'{args.model} is in use, forcing llm_dim to be 4096')
+        args.llm_dim = 4096
+    else:
+        pass
 
     if args.task_name == 'long_term_forecast':
         Exp = Exp_Long_Term_Forecast
