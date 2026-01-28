@@ -69,6 +69,10 @@ def iter_rows(xml_path: Path) -> Iterable[Tuple[Dict[str, str], Dict[str, str]]]
                     # Should not happen in valid meandata files, but guard anyway
                     current_interval = {"interval_begin": "", "interval_end": "", "interval_id": ""}
                 edge_attribs = dict(elem.attrib)  # shallow copy
+                # calculate volume if possible
+                speed = float(elem.attrib.get("speed", 0.0))
+                density = float(elem.attrib.get("density", 0.0))
+                edge_attribs["volume"] = str(round(speed * 3.6 * density, 3))
                 yield current_interval, edge_attribs
                 elem.clear()
             elif elem.tag == "interval":
@@ -117,7 +121,7 @@ def process_file(xml_path: Path, out_dir: Path) -> Path:
     file_meta = {"file_id": file_id, "file_name": xml_path.name}
 
     # First pass: discover union of edge attribute names
-    edge_fields = sorted(discover_edge_fields(xml_path))
+    edge_fields = sorted(list(discover_edge_fields(xml_path)) + ['volume'])  # include 'volume' if calculated
 
     # Second pass: collect rows
     rows: List[Tuple[Dict[str, str], Dict[str, str]]] = list(iter_rows(xml_path))

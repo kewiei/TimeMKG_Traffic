@@ -44,7 +44,8 @@ class Model(nn.Module):
         
         with open(self.data_path, 'r') as f:
             first_line = f.readline().strip()
-        self.variables = ['arrived','density','departed','entered','laneChangedFrom','laneChangedTo','laneDensity','left','occupancy','overlapTraveltime','sampledSeconds','speed','speedRelative','teleported','timeLoss','traveltime','waitingTime']
+        # self.variables = ['arrived','density','departed','entered','laneChangedFrom','laneChangedTo','laneDensity','left','occupancy','overlapTraveltime','sampledSeconds','speed','speedRelative','teleported','timeLoss','traveltime','waitingTime']
+        self.variables = ['arrived','density','departed','entered','laneChangedFrom','laneChangedTo','laneDensity','left','occupancy','overlapTraveltime','sampledSeconds','speed','speedRelative','teleported','timeLoss','traveltime','volume','waitingTime']
         self.prompt_bank = configs.prompt_path
         
         with open(self.prompt_bank, 'r') as f:
