@@ -172,6 +172,9 @@ class Dataset_Traffic_Multivariate(Dataset):
                 # 线性插值
                 f = interp1d(non_na_idx, non_na_vals, kind='linear', bounds_error=False, fill_value="extrapolate")
                 df_filtered[col] = f(df_filtered.index)
+
+        # 保留所有列，直接对残余缺失填 0，避免 StandardScaler 出现 NaN
+        df_filtered = df_filtered.fillna(0)
         
         # 4. 划分训练/验证/测试集
         total_len = len(df_filtered)
