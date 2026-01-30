@@ -6,12 +6,14 @@ export CUDA_VISIBLE_DEVICES=0
 
 # 模型名称
 # model_name=TimeMKG
+# model_name=TimeMKG8B
 # model_name=Autoformer
 # model_name=TimesNet
-# model_name=iTransformer
-model_name=DLinear
+model_name=iTransformer
+# model_name=DLinear
 
-DATA_ROOT_PATH="/home/nanodt/gitroot/2V_base/edge_merge_base_large_acc" 
+# DATA_ROOT_PATH="/home/nanodt/gitroot/2V_base/edge_merge_base_large_acc" 
+DATA_ROOT_PATH="/home/nanodt/gitroot/18V_acc8/edge_merge_base_acc" 
 
 # 2. 其他固定的训练参数
 TASK_NAME="long_term_forecast"
@@ -24,9 +26,9 @@ PRED_LEN=12
 E_LAYERS=2
 D_LAYERS=2
 FACTOR=1
-ENC_IN=2  # 根据你的数据特征数调整
-DEC_IN=2  # 根据你的数据特征数调整
-C_OUT=2   # 根据你的预测目标数调整
+ENC_IN=18  # 根据你的数据特征数调整
+DEC_IN=18  # 根据你的数据特征数调整
+C_OUT=18   # 根据你的预测目标数调整
 DES="test"
 D_MODEL=512
 D_FF=512
