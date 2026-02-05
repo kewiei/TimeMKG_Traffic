@@ -8,8 +8,8 @@ from tqdm import tqdm  # For displaying progress bar (install with: pip install 
 # output_dir = "traffic/edge_merge"  # Output folder path
 # traffic_dir = r"E:\SUMO_Outputs\2V_base\edge_base"  # Input folder path
 # output_dir = r"E:\SUMO_Outputs\2V_base\edge_merge_small"  # Output folder path
-traffic_dir = r"E:\SUMO_Outputs\18V_acc8\edge_base"  # Input folder path
-output_dir = r"E:\SUMO_Outputs\18V_acc8\edge_merge"  # Output folder path
+traffic_dir = r"E:\SUMO_Outputs\edge_base_bal"  # Input folder path
+output_dir = r"E:\SUMO_Outputs\predictor_training_data\18v\edge_merge_bal"  # Output folder path
 # output_dir = r"E:\SUMO_Outputs\2V_base\edge_merge"  # Output folder path
 id_column = "id"  # Column name used for grouping (i.e., the id column)
 # ----------------------------------------------------------------------
@@ -31,6 +31,8 @@ print('csv_files',os.listdir(traffic_dir))
 print('csv_files',csv_files)
 # Record created ID files (to avoid duplicate headers)
 created_ids = set()
+blacklist_col = []
+# blacklist_col = ["arrived","density","departed","entered","laneChangedFrom","laneChangedTo","laneDensity","left","occupancy","overlapTraveltime","sampledSeconds","speedRelative","teleported","timeLoss","traveltime","waitingTime"]
 
 # Process files one by one (reduce memory usage)
 for file_idx, file in enumerate(tqdm(csv_files, desc="Total Progress")):
@@ -45,6 +47,8 @@ for file_idx, file in enumerate(tqdm(csv_files, desc="Total Progress")):
             if id_column not in chunk.columns:
                 print(f"\nWarning: File {file} lacks {id_column} column, skipped")
                 break
+            # Remove blacklisted columns if they exist in the chunk
+            chunk = chunk.drop(columns=[col for col in blacklist_col if col in chunk.columns], errors='ignore')
             
             # Group by ID and iterate through each ID's data
             for id_val, group in chunk.groupby(id_column, observed=True):
