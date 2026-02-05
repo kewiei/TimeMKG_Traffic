@@ -62,7 +62,7 @@ class Model(nn.Module):
             embedding_file_label= "8b"
         else:
             embedding_file_label = "4b"
-        self.prompt_embeddings_path = os.path.join(configs.checkpoints, f"prompt_embeddings_{embedding_file_label}_bs{configs.batch_size}.pt")
+        self.prompt_embeddings_path = os.path.join(configs.checkpoints, f"prompt_embeddings_{embedding_file_label}_bs{configs.batch_size}_ei{configs.enc_in}.pt")
         
         # 只加载tokenizer（始终需要）
         # model_path = "/mnt/petrelfs/sunyifei/qwen3"
