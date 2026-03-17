@@ -13,7 +13,7 @@ model_name=TimeMKG
 # model_name=DLinear
 
 # DATA_ROOT_PATH="/home/nanodt/gitroot/2V_base/edge_merge_base_large_acc" 
-DATA_ROOT_PATH="/home/nanodt/gitroot/18V_acc8/edge_merge_base_acc" 
+DATA_ROOT_PATH="/home/nanodt/gitroot/predictor_training_data/18v/edge_merge_bal" 
 
 # 2. 其他固定的训练参数
 TASK_NAME="long_term_forecast"
